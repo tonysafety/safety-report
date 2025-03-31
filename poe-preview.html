@@ -1,0 +1,1477 @@
+<!DOCTYPE html><html lang="zh-Hant"><head><meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' 'unsafe-eval' data: blob: https://cdnjs.cloudflare.com https://cdn.jsdelivr.net https://code.jquery.com https://unpkg.com https://d3js.org https://threejs.org https://cdn.plot.ly https://stackpath.bootstrapcdn.com https://maps.googleapis.com https://cdn.tailwindcss.com https://ajax.googleapis.com https://kit.fontawesome.com https://cdn.datatables.net https://maxcdn.bootstrapcdn.com https://code.highcharts.com https://tako-static-assets-production.s3.amazonaws.com https://www.youtube.com https://fonts.googleapis.com https://fonts.gstatic.com https://pfst.cf2.poecdn.net https://puc.poecdn.net https://i.imgur.com https://wikimedia.org https://*.icons8.com https://*.giphy.com https://picsum.photos https://images.unsplash.com; frame-src 'self' https://www.youtube.com https://trytako.com; child-src 'self'; manifest-src 'self'; worker-src 'self'; upgrade-insecure-requests; block-all-mixed-content;">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>每週安全視察報告</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @media print {
+            .no-print {
+                display: none;
+            }
+            .page-break {
+                page-break-after: always;
+            }
+        }
+        
+        .table-border {
+            border: 1px solid #000;
+            border-collapse: collapse;
+        }
+        
+        .table-border th, .table-border td {
+            border: 1px solid #000;
+            padding: 8px;
+        }
+        
+        .dark .table-border {
+            border: 1px solid #555;
+        }
+        
+        .dark .table-border th, .dark .table-border td {
+            border: 1px solid #555;
+        }
+        
+        input, textarea, select {
+            background-color: transparent;
+        }
+        
+        .form-input, .form-select {
+            border: 1px solid #ccc;
+            padding: 6px;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+        
+        .dark .form-input, .dark .form-select {
+            border-color: #555;
+            color: white;
+        }
+        
+        .add-photo-btn {
+            width: 150px;
+            height: 150px;
+            border: 2px dashed #ccc;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 24px;
+        }
+        
+        .photo-display {
+            width: 150px;
+            height: 150px;
+            object-fit: cover;
+        }
+        
+        .table-vertical th {
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            vertical-align: middle;
+            text-align: center;
+            white-space: nowrap;
+        }
+        
+        .loader {
+            border: 4px solid rgba(0, 0, 0, 0.1);
+            border-left-color: #5D5CDE;
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        
+        .dark .loader {
+            border-color: rgba(255, 255, 255, 0.1);
+            border-left-color: #5D5CDE;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-white dark:bg-gray-900 text-black dark:text-white min-h-screen">
+    <div class="container mx-auto px-4 py-8 max-w-5xl">
+        <div class="flex justify-between items-center mb-6">
+            <h1 class="text-2xl font-bold">每週安全視察報告</h1>
+            <div class="space-x-2">
+                <button id="saveBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded no-print">
+                    <i class="fas fa-save mr-2"></i>儲存報告
+                </button>
+                <button id="loadBtn" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded no-print">
+                    <i class="fas fa-folder-open mr-2"></i>載入報告
+                </button>
+                <button id="printBtn" class="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded no-print">
+                    <i class="fas fa-print mr-2"></i>列印/複製
+                </button>
+            </div>
+        </div>
+        
+        <div id="report-content" class="bg-white dark:bg-gray-800 p-8 rounded-lg shadow-md">
+            <!-- Report Header -->
+            <div class="text-center mb-6">
+                <h1 class="text-2xl font-bold" id="report-title-display">每週安全視察報告 WW10</h1>
+                <input type="text" id="report-week" class="form-input mt-2 text-center w-20 no-print" value="WW10" placeholder="週數">
+            </div>
+            
+            <table class="w-full table-border mb-6">
+                <tbody><tr>
+                    <td width="20%" class="font-bold">合約編號：</td>
+                    <td width="30%">
+                        <input type="text" id="contract-number" class="form-input w-full" value="將軍澳綜合大樓JUB">
+                    </td>
+                    <td width="20%" class="font-bold">巡查日期：</td>
+                    <td width="30%">
+                        <div class="flex items-center">
+                            <input type="date" id="inspection-date-start" class="form-input w-full" value="2025-03-02">
+                            <span class="mx-2">-</span>
+                            <input type="date" id="inspection-date-end" class="form-input w-full" value="2025-03-08">
+                        </div>
+                    </td>
+                </tr>
+                <tr>
+                    <td class="font-bold">巡查人士：</td>
+                    <td>
+                        <input type="text" id="inspector-name" class="form-input w-full" value="Lee Ming Ki (ASO)">
+                    </td>
+                    <td class="font-bold">簽名：</td>
+                    <td>
+                        <div id="signature-pad" class="border border-gray-300 dark:border-gray-600 h-20 w-full bg-gray-50 dark:bg-gray-700 cursor-crosshair relative">
+                            <canvas id="signature-canvas" class="absolute top-0 left-0 w-full h-full"></canvas>
+                        </div>
+                        <button id="clear-signature" class="text-sm text-blue-600 dark:text-blue-400 mt-1 no-print">清除簽名</button>
+                    </td>
+                </tr>
+            </tbody></table>
+            
+            <!-- 1. 工傷意外事故 -->
+            <div class="mb-6">
+                <h2 class="text-xl font-bold mb-2">1. 工傷意外事故</h2>
+                <textarea id="accident-report" class="form-input w-full h-20" placeholder="輸入工傷意外事故報告">本星期沒有任何工傷意外事故報告。</textarea>
+            </div>
+            
+            <!-- 2. 安保及建築署/政府部門之巡查記錄 -->
+            <div class="mb-6">
+                <div class="flex justify-between items-center mb-2">
+                    <h2 class="text-xl font-bold">2. 安保及建築署/政府部門之巡查記錄</h2>
+                    <button id="add-inspection-record" class="text-blue-600 dark:text-blue-400 no-print">
+                        <i class="fas fa-plus-circle"></i> 添加記錄
+                    </button>
+                </div>
+                <table id="inspection-records-table" class="w-full table-border">
+                    <thead>
+                        <tr class="bg-gray-100 dark:bg-gray-700">
+                            <th width="15%">日期</th>
+                            <th width="15%">巡查人</th>
+                            <th width="50%">巡視內容/地點</th>
+                            <th width="15%">備註</th>
+                            <th width="5%" class="no-print"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <input type="date" class="form-input w-full" value="2025-03-04">
+                            </td>
+                            <td>
+                                <input type="text" class="form-input w-full" value="Able &amp; ASD">
+                            </td>
+                            <td>
+                                <input type="text" class="form-input w-full" value="北座Basement &amp; ( 1/F-15/F)">
+                            </td>
+                            <td>
+                                <input type="text" class="form-input w-full" value="-">
+                            </td>
+                            <td class="text-center no-print">
+                                <button class="text-red-500 delete-row">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- 3. 安保及建築署/政府部門發出的信件 -->
+            <div class="mb-6">
+                <div class="flex justify-between items-center mb-2">
+                    <h2 class="text-xl font-bold">3. 安保及建築署/政府部門發出的信件</h2>
+                    <button id="add-dept-letter" class="text-blue-600 dark:text-blue-400 no-print">
+                        <i class="fas fa-plus-circle"></i> 添加信件
+                    </button>
+                </div>
+                <table id="dept-letters-table" class="w-full table-border">
+                    <thead>
+                        <tr class="bg-gray-100 dark:bg-gray-700">
+                            <th width="15%">日期</th>
+                            <th width="15%">編號</th>
+                            <th width="15%">收件人</th>
+                            <th width="40%">內容</th>
+                            <th width="10%">備註</th>
+                            <th width="5%" class="no-print"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <input type="text" class="form-input w-full" value="-">
+                            </td>
+                            <td>
+                                <input type="text" class="form-input w-full" value="-">
+                            </td>
+                            <td>
+                                <input type="text" class="form-input w-full" value="-">
+                            </td>
+                            <td>
+                                <input type="text" class="form-input w-full" value="-">
+                            </td>
+                            <td>
+                                <input type="text" class="form-input w-full" value="-">
+                            </td>
+                            <td class="text-center no-print">
+                                <button class="text-red-500 delete-row">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- 4. 保時發出的信件 -->
+            <div class="mb-6">
+                <div class="flex justify-between items-center mb-2">
+                    <h2 class="text-xl font-bold">4. 保時發出的信件</h2>
+                    <button id="add-company-letter" class="text-blue-600 dark:text-blue-400 no-print">
+                        <i class="fas fa-plus-circle"></i> 添加信件
+                    </button>
+                </div>
+                <table id="company-letters-table" class="w-full table-border">
+                    <thead>
+                        <tr class="bg-gray-100 dark:bg-gray-700">
+                            <th width="15%">日期</th>
+                            <th width="15%">編號</th>
+                            <th width="15%">收件人</th>
+                            <th width="40%">內容</th>
+                            <th width="10%">備註</th>
+                            <th width="5%" class="no-print"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <input type="date" class="form-input w-full" value="2025-03-05">
+                            </td>
+                            <td>
+                                <input type="text" class="form-input w-full" value="SM-276">
+                            </td>
+                            <td>
+                                <input type="text" class="form-input w-full" value="各分判">
+                            </td>
+                            <td>
+                                <input type="text" class="form-input w-full" value="每週安全巡查報告WW01-03">
+                            </td>
+                            <td>
+                                <input type="text" class="form-input w-full" value="-">
+                            </td>
+                            <td class="text-center no-print">
+                                <button class="text-red-500 delete-row">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- 5. 安全表現/跟進事件 -->
+            <div class="mb-6">
+                <div class="flex justify-between items-center mb-2">
+                    <h2 class="text-xl font-bold">5. 安全表現/跟進事件</h2>
+                    <button id="add-safety-incident" class="text-blue-600 dark:text-blue-400 no-print">
+                        <i class="fas fa-plus-circle"></i> 添加事件
+                    </button>
+                </div>
+                <table id="safety-incidents-table" class="w-full table-border">
+                    <thead>
+                        <tr class="bg-gray-100 dark:bg-gray-700">
+                            <th width="15%">日期</th>
+                            <th width="40%">事件描述</th>
+                            <th width="10%">負責人</th>
+                            <th width="15%">改善期限</th>
+                            <th width="15%">備註</th>
+                            <th width="5%" class="no-print"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <input type="date" class="form-input w-full" value="2025-03-04">
+                            </td>
+                            <td>
+                                <textarea class="form-input w-full h-24">梯台欠缺季度貼紙及安全圍欄，容易發生危險。
+
+跟進:以即時要求分判檢查梯台，加裝安全圍欄及貼上季度貼紙，防止意外發生。</textarea>
+                            </td>
+                            <td>
+                                <input type="text" class="form-input w-full" value="合生">
+                            </td>
+                            <td>
+                                <input type="text" class="form-input w-full" value="即時跟進完成">
+                            </td>
+                            <td>
+                                <input type="text" class="form-input w-full" value="相片編號：01 &amp; 02">
+                            </td>
+                            <td class="text-center no-print">
+                                <button class="text-red-500 delete-row">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <input type="date" class="form-input w-full" value="2025-03-08">
+                            </td>
+                            <td>
+                                <textarea class="form-input w-full h-24">動力工作台使用完畢，未有把升降台停泊好，會引致交通阻塞而造造成危險。
+
+跟進:即時要求工人把升降台泊好及圍封，保持主要通道暢通。</textarea>
+                            </td>
+                            <td>
+                                <input type="text" class="form-input w-full" value="(騰達)">
+                            </td>
+                            <td>
+                                <input type="text" class="form-input w-full" value="即時跟進完成">
+                            </td>
+                            <td>
+                                <input type="text" class="form-input w-full" value="相片編號：09 &amp; 10">
+                            </td>
+                            <td class="text-center no-print">
+                                <button class="text-red-500 delete-row">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- 6. 本星期巡查期間的工具箱訓練紀錄 -->
+            <div class="mb-6">
+                <h2 class="text-xl font-bold mb-2">6. 本星期巡查期間的工具箱訓練紀錄</h2>
+                <table id="toolbox-training-table" class="w-full table-border">
+                    <thead>
+                        <tr class="bg-gray-100 dark:bg-gray-700">
+                            <th width="25%">訓練內容</th>
+                            <th width="15%">訓練日期</th>
+                            <th width="15%">出席人數</th>
+                            <th width="20%">上次訓練日期</th>
+                            <th width="20%">預計訓練日期</th>
+                            <th width="5%" class="no-print"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>
+                                <input type="text" class="form-input w-full" value="防火安全">
+                            </td>
+                            <td>
+                                <input type="text" class="form-input w-full" value="-">
+                            </td>
+                            <td>
+                                <input type="text" class="form-input w-full" value="-">
+                            </td>
+                            <td>
+                                <input type="date" class="form-input w-full" value="2025-02-27">
+                            </td>
+                            <td>
+                                <input type="text" class="form-input w-full" value="-">
+                            </td>
+                            <td class="text-center no-print">
+                                <button class="text-red-500 delete-row">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <input type="text" class="form-input w-full" value="手提動力工具">
+                            </td>
+                            <td>
+                                <input type="text" class="form-input w-full" value="-">
+                            </td>
+                            <td>
+                                <input type="text" class="form-input w-full" value="-">
+                            </td>
+                            <td>
+                                <input type="date" class="form-input w-full" value="2025-02-27">
+                            </td>
+                            <td>
+                                <input type="text" class="form-input w-full" value="-">
+                            </td>
+                            <td class="text-center no-print">
+                                <button class="text-red-500 delete-row">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <input type="text" class="form-input w-full" value="高空墜物">
+                            </td>
+                            <td>
+                                <input type="date" class="form-input w-full" value="2025-03-07">
+                            </td>
+                            <td>
+                                <input type="text" class="form-input w-full" value="-">
+                            </td>
+                            <td>
+                                <input type="date" class="form-input w-full" value="2025-01-23">
+                            </td>
+                            <td>
+                                <input type="text" class="form-input w-full" value="-">
+                            </td>
+                            <td class="text-center no-print">
+                                <button class="text-red-500 delete-row">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>
+                                <input type="text" class="form-input w-full" value="吊運安全">
+                            </td>
+                            <td>
+                                <input type="date" class="form-input w-full" value="2025-03-07">
+                            </td>
+                            <td>
+                                <input type="text" class="form-input w-full" value="-">
+                            </td>
+                            <td>
+                                <input type="date" class="form-input w-full" value="2025-01-16">
+                            </td>
+                            <td>
+                                <input type="text" class="form-input w-full" value="-">
+                            </td>
+                            <td class="text-center no-print">
+                                <button class="text-red-500 delete-row">
+                                    <i class="fas fa-trash"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button id="add-toolbox-training" class="text-blue-600 dark:text-blue-400 mt-2 no-print">
+                    <i class="fas fa-plus-circle"></i> 添加訓練記錄
+                </button>
+            </div>
+            
+            <!-- 安全檢查項目表 -->
+            <div class="mb-6">
+                <h2 class="text-xl font-bold mb-2">安全檢查項目</h2>
+                <table class="w-full table-border mb-4">
+                    <thead>
+                        <tr class="bg-gray-100 dark:bg-gray-700">
+                            <th width="40%">檢查項目</th>
+                            <th width="20%">滿意/不滿意/不適用</th>
+                            <th width="40%">跟進工作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- 進出口 -->
+                        <tr>
+                            <td colspan="3" class="font-bold bg-gray-50 dark:bg-gray-700">進出口：</td>
+                        </tr>
+                        <tr>
+                            <td>- 木板路</td>
+                            <td>
+                                <select class="form-select w-full">
+                                    <option value="Y">Y</option>
+                                    <option value="N" selected="">N</option>
+                                    <option value="NA">NA</option>
+                                </select>
+                            </td>
+                            <td>
+                                <input type="text" class="form-input w-full" value="">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>- 梯</td>
+                            <td>
+                                <select class="form-select w-full">
+                                    <option value="Y" selected="">Y</option>
+                                    <option value="N">N</option>
+                                    <option value="NA">NA</option>
+                                </select>
+                            </td>
+                            <td>
+                                <textarea class="form-input w-full h-20">梯台欠缺季度貼紙及安全圍欄，容易發生危險。
+
+跟進:以即時要求分判檢查梯台，加裝安全圍欄及貼上季度貼紙，防止意外發生。</textarea>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>- 通路</td>
+                            <td>
+                                <select class="form-select w-full">
+                                    <option value="Y">Y</option>
+                                    <option value="N" selected="">N</option>
+                                    <option value="NA">NA</option>
+                                </select>
+                            </td>
+                            <td>
+                                <input type="text" class="form-input w-full" value="">
+                            </td>
+                        </tr>
+                        
+                        <!-- 高空作業 -->
+                        <tr>
+                            <td colspan="3" class="font-bold bg-gray-50 dark:bg-gray-700">高空作業：</td>
+                        </tr>
+                        <tr>
+                            <td>- 棚架</td>
+                            <td>
+                                <select class="form-select w-full">
+                                    <option value="Y">Y</option>
+                                    <option value="N" selected="">N</option>
+                                    <option value="NA">NA</option>
+                                </select>
+                            </td>
+                            <td>
+                                <input type="text" class="form-input w-full" value="">
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>- 工作平台</td>
+                            <td>
+                                <select class="form-select w-full">
+                                    <option value="Y" selected="">Y</option>
+                                    <option value="N">N</option>
+                                    <option value="NA">NA</option>
+                                </select>
+                            </td>
+                            <td>
+                                <textarea class="form-input w-full h-20">動力工作台使用完畢，未有把升降台停泊好，會引致交通阻塞而造造成危險。
+
+跟進:即時要求工人把升降台泊好及圍封，保持主要通道暢通。</textarea>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <button id="add-inspection-item" class="text-blue-600 dark:text-blue-400 mt-2 no-print">
+                    <i class="fas fa-plus-circle"></i> 添加檢查項目
+                </button>
+            </div>
+            
+            <!-- 相片記錄 -->
+            <div class="mb-6">
+                <div class="flex justify-between items-center mb-2">
+                    <h2 class="text-xl font-bold">相片記錄</h2>
+                    <button id="add-photo-record" class="text-blue-600 dark:text-blue-400 no-print">
+                        <i class="fas fa-plus-circle"></i> 添加相片記錄
+                    </button>
+                </div>
+                <div id="photo-records-container">
+                    <div class="photo-row grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                        <div class="photo-record bg-gray-50 dark:bg-gray-700 p-4 rounded">
+                            <div class="flex mb-4">
+                                <div class="mr-4">
+                                    <div class="add-photo-btn no-print">
+                                        <i class="fas fa-plus"></i>
+                                    </div>
+                                    <img src="" alt="相片 01" class="photo-display hidden">
+                                    <input type="file" class="hidden photo-input" accept="image/*">
+                                </div>
+                                <div class="flex-1">
+                                    <div class="mb-2">
+                                        <label class="block text-sm font-medium">相片編號：</label>
+                                        <input type="text" class="form-input w-full" value="01">
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="block text-sm font-medium">描述:</label>
+                                        <textarea class="form-input w-full h-16">梯台欠缺季度貼紙及安全圍欄，容易發生危險。</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium">日期位置:</label>
+                                    <input type="text" class="form-input w-full" value="04/03/2025 (北座15/F)">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium">改善建議:</label>
+                                    <input type="text" class="form-input w-full" value="-">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium">備註：</label>
+                                    <input type="text" class="form-input w-full" value="即時跟進 (合生)">
+                                </div>
+                                <div class="flex items-end no-print">
+                                    <button class="text-red-500 delete-photo">
+                                        <i class="fas fa-trash"></i> 刪除相片
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div class="photo-record bg-gray-50 dark:bg-gray-700 p-4 rounded">
+                            <div class="flex mb-4">
+                                <div class="mr-4">
+                                    <div class="add-photo-btn no-print">
+                                        <i class="fas fa-plus"></i>
+                                    </div>
+                                    <img src="" alt="相片 02" class="photo-display hidden">
+                                    <input type="file" class="hidden photo-input" accept="image/*">
+                                </div>
+                                <div class="flex-1">
+                                    <div class="mb-2">
+                                        <label class="block text-sm font-medium">相片編號：</label>
+                                        <input type="text" class="form-input w-full" value="02">
+                                    </div>
+                                    <div class="mb-2">
+                                        <label class="block text-sm font-medium">描述:</label>
+                                        <textarea class="form-input w-full h-16">跟進:以即時要求分判檢查梯台，加裝安全圍欄及貼上季度貼紙，防止意外發生。</textarea>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 gap-4">
+                                <div>
+                                    <label class="block text-sm font-medium">日期位置:</label>
+                                    <input type="text" class="form-input w-full" value="04/03/2025 (北座15/F)">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium">改善建議:</label>
+                                    <input type="text" class="form-input w-full" value="-">
+                                </div>
+                                <div>
+                                    <label class="block text-sm font-medium">備註：</label>
+                                    <input type="text" class="form-input w-full" value="跟進完成 (合生)">
+                                </div>
+                                <div class="flex items-end no-print">
+                                    <button class="text-red-500 delete-photo">
+                                        <i class="fas fa-trash"></i> 刪除相片
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- AI 助手 -->
+        <div class="fixed bottom-4 right-4 no-print">
+            <button id="ai-assistant-btn" class="bg-indigo-600 hover:bg-indigo-700 text-white w-12 h-12 rounded-full flex items-center justify-center shadow-lg">
+                <i class="fas fa-robot text-xl"></i>
+            </button>
+            
+            <div id="ai-assistant-panel" class="hidden bg-white dark:bg-gray-800 rounded-lg shadow-xl p-4 mb-4 w-80">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="font-bold">AI 助手</h3>
+                    <button id="close-ai-assistant" class="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-sm font-medium mb-1">我需要幫助：</label>
+                    <textarea id="ai-prompt" class="form-input w-full h-24" placeholder="例如：生成一段關於安全跟進的描述"></textarea>
+                </div>
+                <button id="ask-ai" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded w-full flex items-center justify-center">
+                    <span>獲取建議</span>
+                    <div id="ai-loader" class="loader ml-2 hidden" style="width: 20px; height: 20px;"></div>
+                </button>
+                <div id="ai-response" class="mt-4 p-3 bg-gray-100 dark:bg-gray-700 rounded max-h-40 overflow-y-auto hidden"></div>
+            </div>
+        </div>
+        
+        <!-- 列印/複製對話框 -->
+        <div id="print-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 no-print">
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-md w-full">
+                <h3 class="text-xl font-bold mb-4">產生報告</h3>
+                <div class="mb-4">
+                    <p class="mb-2">選擇您想要的操作：</p>
+                    <div class="flex flex-col space-y-3">
+                        <button id="print-report" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center justify-center">
+                            <i class="fas fa-print mr-2"></i>列印報告
+                        </button>
+                        <button id="save-as-pdf" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded flex items-center justify-center">
+                            <i class="fas fa-file-pdf mr-2"></i>輸出為PDF
+                        </button>
+                        <button id="copy-report" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded flex items-center justify-center">
+                            <i class="fas fa-copy mr-2"></i>複製報告內容
+                        </button>
+                    </div>
+                </div>
+                <div class="flex justify-end">
+                    <button id="close-print-modal" class="px-4 py-2 bg-gray-300 hover:bg-gray-400 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white rounded">
+                        關閉
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- PDF 輸出指引對話框 -->
+        <div id="pdf-guide-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center hidden z-50 no-print">
+            <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-lg w-full">
+                <h3 class="text-xl font-bold mb-4">將報告輸出為PDF</h3>
+                <div class="mb-6">
+                    <p class="mb-4 text-gray-600 dark:text-gray-300">請按照以下步驟將報告保存為PDF檔案：</p>
+                    <ol class="list-decimal pl-5 space-y-2 text-gray-600 dark:text-gray-300">
+                        <li>點擊下方的<strong>「開始PDF輸出流程」</strong>按鈕</li>
+                        <li>系統將打開瀏覽器的列印對話框</li>
+                        <li>在列印對話框中，將<strong>目標打印機</strong>更改為<strong>「另存為PDF」</strong>或<strong>「Microsoft Print to PDF」</strong>或類似選項</li>
+                        <li>根據需要調整紙張大小和方向（建議使用A4紙張，縱向）</li>
+                        <li>如果需要，可以在「更多設置」中禁用頁眉和頁腳</li>
+                        <li>點擊「保存」或「列印」按鈕</li>
+                        <li>選擇保存PDF檔案的位置，然後點擊「保存」</li>
+                    </ol>
+                </div>
+                <div class="flex justify-between">
+                    <button id="start-pdf-process" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded">
+                        <i class="fas fa-file-pdf mr-2"></i>開始PDF輸出流程
+                    </button>
+                    <button id="close-pdf-guide" class="px-4 py-2 bg-gray-300 hover:bg-gray-400 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white rounded">
+                        關閉
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/signature_pad/1.5.3/signature_pad.min.js"></script>
+    <script>
+        // Detect dark mode
+        if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+            document.documentElement.classList.add('dark');
+        }
+        window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+            if (event.matches) {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
+            }
+        });
+        
+        // Signature Pad
+        const canvas = document.getElementById('signature-canvas');
+        const signaturePad = new SignaturePad(canvas);
+        
+        function resizeCanvas() {
+            const ratio = Math.max(window.devicePixelRatio || 1, 1);
+            canvas.width = canvas.offsetWidth * ratio;
+            canvas.height = canvas.offsetHeight * ratio;
+            canvas.getContext("2d").scale(ratio, ratio);
+            signaturePad.clear();
+        }
+        
+        window.addEventListener("resize", resizeCanvas);
+        resizeCanvas();
+        
+        document.getElementById('clear-signature').addEventListener('click', function() {
+            signaturePad.clear();
+        });
+        
+        // Add row to tables
+        function addRowToTable(tableId, rowTemplate) {
+            const tbody = document.querySelector(`#${tableId} tbody`);
+            const newRow = document.createElement('tr');
+            newRow.innerHTML = rowTemplate;
+            tbody.appendChild(newRow);
+            
+            // Add event listener to delete button
+            newRow.querySelector('.delete-row').addEventListener('click', function() {
+                tbody.removeChild(newRow);
+            });
+        }
+        
+        // Add event listeners for add row buttons
+        document.getElementById('add-inspection-record').addEventListener('click', function() {
+            const rowTemplate = `
+                <td>
+                    <input type="date" class="form-input w-full">
+                </td>
+                <td>
+                    <input type="text" class="form-input w-full">
+                </td>
+                <td>
+                    <input type="text" class="form-input w-full">
+                </td>
+                <td>
+                    <input type="text" class="form-input w-full" value="-">
+                </td>
+                <td class="text-center no-print">
+                    <button class="text-red-500 delete-row">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            addRowToTable('inspection-records-table', rowTemplate);
+        });
+        
+        document.getElementById('add-dept-letter').addEventListener('click', function() {
+            const rowTemplate = `
+                <td>
+                    <input type="date" class="form-input w-full">
+                </td>
+                <td>
+                    <input type="text" class="form-input w-full">
+                </td>
+                <td>
+                    <input type="text" class="form-input w-full">
+                </td>
+                <td>
+                    <input type="text" class="form-input w-full">
+                </td>
+                <td>
+                    <input type="text" class="form-input w-full" value="-">
+                </td>
+                <td class="text-center no-print">
+                    <button class="text-red-500 delete-row">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            addRowToTable('dept-letters-table', rowTemplate);
+        });
+        
+        document.getElementById('add-company-letter').addEventListener('click', function() {
+            const rowTemplate = `
+                <td>
+                    <input type="date" class="form-input w-full">
+                </td>
+                <td>
+                    <input type="text" class="form-input w-full">
+                </td>
+                <td>
+                    <input type="text" class="form-input w-full">
+                </td>
+                <td>
+                    <input type="text" class="form-input w-full">
+                </td>
+                <td>
+                    <input type="text" class="form-input w-full" value="-">
+                </td>
+                <td class="text-center no-print">
+                    <button class="text-red-500 delete-row">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            addRowToTable('company-letters-table', rowTemplate);
+        });
+        
+        document.getElementById('add-safety-incident').addEventListener('click', function() {
+            const rowTemplate = `
+                <td>
+                    <input type="date" class="form-input w-full">
+                </td>
+                <td>
+                    <textarea class="form-input w-full h-24"></textarea>
+                </td>
+                <td>
+                    <input type="text" class="form-input w-full">
+                </td>
+                <td>
+                    <input type="text" class="form-input w-full">
+                </td>
+                <td>
+                    <input type="text" class="form-input w-full">
+                </td>
+                <td class="text-center no-print">
+                    <button class="text-red-500 delete-row">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            addRowToTable('safety-incidents-table', rowTemplate);
+        });
+        
+        document.getElementById('add-toolbox-training').addEventListener('click', function() {
+            const rowTemplate = `
+                <td>
+                    <input type="text" class="form-input w-full">
+                </td>
+                <td>
+                    <input type="date" class="form-input w-full">
+                </td>
+                <td>
+                    <input type="text" class="form-input w-full">
+                </td>
+                <td>
+                    <input type="date" class="form-input w-full">
+                </td>
+                <td>
+                    <input type="date" class="form-input w-full">
+                </td>
+                <td class="text-center no-print">
+                    <button class="text-red-500 delete-row">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            `;
+            addRowToTable('toolbox-training-table', rowTemplate);
+        });
+        
+        // Add event listener to delete buttons
+        document.querySelectorAll('.delete-row').forEach(button => {
+            button.addEventListener('click', function() {
+                const row = this.closest('tr');
+                row.parentNode.removeChild(row);
+            });
+        });
+        
+        // Photo handling
+        document.querySelectorAll('.add-photo-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const photoInput = this.closest('.photo-record').querySelector('.photo-input');
+                photoInput.click();
+            });
+        });
+        
+        document.querySelectorAll('.photo-input').forEach(input => {
+            input.addEventListener('change', function() {
+                const photoRecord = this.closest('.photo-record');
+                const photoDisplay = photoRecord.querySelector('.photo-display');
+                const addBtn = photoRecord.querySelector('.add-photo-btn');
+                
+                if (this.files && this.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        photoDisplay.src = e.target.result;
+                        photoDisplay.classList.remove('hidden');
+                        addBtn.classList.add('hidden');
+                    };
+                    reader.readAsDataURL(this.files[0]);
+                }
+            });
+        });
+        
+        document.querySelectorAll('.delete-photo').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const photoRecord = this.closest('.photo-record');
+                const photoDisplay = photoRecord.querySelector('.photo-display');
+                const addBtn = photoRecord.querySelector('.add-photo-btn');
+                const photoInput = photoRecord.querySelector('.photo-input');
+                
+                photoDisplay.src = '';
+                photoDisplay.classList.add('hidden');
+                addBtn.classList.remove('hidden');
+                photoInput.value = '';
+            });
+        });
+        
+        // Add photo record
+        document.getElementById('add-photo-record').addEventListener('click', function() {
+            const photoRecordsContainer = document.getElementById('photo-records-container');
+            const photoRows = photoRecordsContainer.querySelectorAll('.photo-row');
+            const lastPhotoRow = photoRows[photoRows.length - 1];
+            
+            // If the last row has 2 photos, create a new row
+            const photoRecordsInLastRow = lastPhotoRow.querySelectorAll('.photo-record');
+            
+            if (photoRecordsInLastRow.length === 2) {
+                // Create new row
+                const newRow = document.createElement('div');
+                newRow.className = 'photo-row grid grid-cols-1 md:grid-cols-2 gap-4 mb-6';
+                newRow.innerHTML = createPhotoRecordHTML();
+                photoRecordsContainer.appendChild(newRow);
+            } else {
+                // Add to existing row
+                lastPhotoRow.innerHTML += createPhotoRecordHTML();
+            }
+            
+            // Add event listeners to new photo record
+            const newPhotoRecord = document.querySelector('.photo-record:last-child');
+            
+            newPhotoRecord.querySelector('.add-photo-btn').addEventListener('click', function() {
+                const photoInput = this.closest('.photo-record').querySelector('.photo-input');
+                photoInput.click();
+            });
+            
+            newPhotoRecord.querySelector('.photo-input').addEventListener('change', function() {
+                const photoRecord = this.closest('.photo-record');
+                const photoDisplay = photoRecord.querySelector('.photo-display');
+                const addBtn = photoRecord.querySelector('.add-photo-btn');
+                
+                if (this.files && this.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        photoDisplay.src = e.target.result;
+                        photoDisplay.classList.remove('hidden');
+                        addBtn.classList.add('hidden');
+                    };
+                    reader.readAsDataURL(this.files[0]);
+                }
+            });
+            
+            newPhotoRecord.querySelector('.delete-photo').addEventListener('click', function() {
+                const photoRecord = this.closest('.photo-record');
+                const photoRow = photoRecord.parentNode;
+                
+                // If this is the only photo in the row
+                if (photoRow.querySelectorAll('.photo-record').length === 1) {
+                    photoRow.parentNode.removeChild(photoRow);
+                } else {
+                    photoRow.removeChild(photoRecord);
+                }
+            });
+        });
+        
+        function createPhotoRecordHTML() {
+            // Get the next photo number
+            const allPhotoNumbers = Array.from(document.querySelectorAll('.photo-record input[value]'))
+                .map(input => {
+                    const value = input.value;
+                    if (/^\d+$/.test(value)) {
+                        return parseInt(value, 10);
+                    }
+                    return 0;
+                })
+                .filter(num => !isNaN(num));
+            
+            const nextPhotoNumber = Math.max(0, ...allPhotoNumbers) + 1;
+            const paddedNumber = nextPhotoNumber.toString().padStart(2, '0');
+            
+            return `
+                <div class="photo-record bg-gray-50 dark:bg-gray-700 p-4 rounded">
+                    <div class="flex mb-4">
+                        <div class="mr-4">
+                            <div class="add-photo-btn no-print">
+                                <i class="fas fa-plus"></i>
+                            </div>
+                            <img src="" alt="相片 ${paddedNumber}" class="photo-display hidden">
+                            <input type="file" class="hidden photo-input" accept="image/*">
+                        </div>
+                        <div class="flex-1">
+                            <div class="mb-2">
+                                <label class="block text-sm font-medium">相片編號：</label>
+                                <input type="text" class="form-input w-full" value="${paddedNumber}">
+                            </div>
+                            <div class="mb-2">
+                                <label class="block text-sm font-medium">描述:</label>
+                                <textarea class="form-input w-full h-16"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium">日期位置:</label>
+                            <input type="text" class="form-input w-full">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium">改善建議:</label>
+                            <input type="text" class="form-input w-full" value="-">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium">備註：</label>
+                            <input type="text" class="form-input w-full">
+                        </div>
+                        <div class="flex items-end no-print">
+                            <button class="text-red-500 delete-photo">
+                                <i class="fas fa-trash"></i> 刪除相片
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Add inspection item
+        document.getElementById('add-inspection-item').addEventListener('click', function() {
+            const categoryName = prompt('請輸入檢查類別（例如：安全設備）：');
+            if (!categoryName) return;
+            
+            const itemName = prompt('請輸入檢查項目（例如：安全帽）：');
+            if (!itemName) return;
+            
+            const inspectionTable = document.querySelector('.table-border:nth-of-type(2) tbody');
+            
+            // Add category row if not exists
+            let categoryExists = false;
+            Array.from(inspectionTable.querySelectorAll('tr')).forEach(row => {
+                const firstCell = row.querySelector('td:first-child');
+                if (firstCell && firstCell.textContent.trim() === categoryName + '：') {
+                    categoryExists = true;
+                }
+            });
+            
+            if (!categoryExists) {
+                const categoryRow = document.createElement('tr');
+                categoryRow.innerHTML = `
+                    <td colspan="3" class="font-bold bg-gray-50 dark:bg-gray-700">${categoryName}：</td>
+                `;
+                inspectionTable.appendChild(categoryRow);
+            }
+            
+            // Add item row
+            const itemRow = document.createElement('tr');
+            itemRow.innerHTML = `
+                <td>- ${itemName}</td>
+                <td>
+                    <select class="form-select w-full">
+                        <option value="Y">Y</option>
+                        <option value="N">N</option>
+                        <option value="NA">NA</option>
+                    </select>
+                </td>
+                <td>
+                    <input type="text" class="form-input w-full" value="">
+                </td>
+            `;
+            inspectionTable.appendChild(itemRow);
+        });
+        
+        // Save functionality (without localStorage)
+        document.getElementById('saveBtn').addEventListener('click', function() {
+            try {
+                const reportData = collectFormData();
+                const reportDataJson = JSON.stringify(reportData);
+                
+                // Show save dialog with options
+                const saveDialog = document.createElement('div');
+                saveDialog.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+                saveDialog.innerHTML = `
+                    <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-md w-full">
+                        <h3 class="text-xl font-bold mb-4 text-gray-800 dark:text-white">儲存報告</h3>
+                        <p class="mb-4 text-gray-600 dark:text-gray-300">請複製以下報告數據並保存到安全的地方：</p>
+                        <div class="space-y-3">
+                            <div class="text-xs overflow-auto bg-gray-100 dark:bg-gray-700 p-2 rounded h-32 mb-2">
+                                <code>${reportDataJson}</code>
+                            </div>
+                            <button id="copy-report-data" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center justify-center">
+                                <i class="fas fa-copy mr-2"></i>複製報告數據
+                            </button>
+                            <p class="text-sm text-gray-500 dark:text-gray-400 text-center">
+                                複製後請保存到記事本或其他文件中，以便將來載入
+                            </p>
+                        </div>
+                        <div class="mt-6 text-center">
+                            <button id="close-save-dialog" class="text-blue-600 dark:text-blue-400 hover:underline">
+                                關閉
+                            </button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(saveDialog);
+                
+                // Add event listeners to the dialog buttons
+                document.getElementById('copy-report-data').addEventListener('click', function() {
+                    const textarea = document.createElement('textarea');
+                    textarea.value = reportDataJson;
+                    document.body.appendChild(textarea);
+                    textarea.select();
+                    document.execCommand('copy');
+                    document.body.removeChild(textarea);
+                    
+                    const copyBtn = document.getElementById('copy-report-data');
+                    copyBtn.innerHTML = '<i class="fas fa-check mr-2"></i>數據已複製';
+                    copyBtn.classList.remove('bg-blue-600', 'hover:bg-blue-700');
+                    copyBtn.classList.add('bg-green-600');
+                    
+                    setTimeout(() => {
+                        copyBtn.innerHTML = '<i class="fas fa-copy mr-2"></i>複製報告數據';
+                        copyBtn.classList.remove('bg-green-600');
+                        copyBtn.classList.add('bg-blue-600', 'hover:bg-blue-700');
+                    }, 2000);
+                });
+                
+                document.getElementById('close-save-dialog').addEventListener('click', function() {
+                    document.body.removeChild(saveDialog);
+                });
+            } catch (error) {
+                console.error('儲存報告時出錯:', error);
+                alert('儲存報告時出錯: ' + error.message);
+            }
+        });
+        
+        document.getElementById('loadBtn').addEventListener('click', function() {
+            // Show load dialog
+            const loadDialog = document.createElement('div');
+            loadDialog.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            loadDialog.innerHTML = `
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-md w-full">
+                    <h3 class="text-xl font-bold mb-4 text-gray-800 dark:text-white">載入報告</h3>
+                    <p class="mb-4 text-gray-600 dark:text-gray-300">請粘貼報告數據或上傳報告文件：</p>
+                    <div class="space-y-3">
+                        <textarea id="report-data-input" class="form-input w-full h-40 text-xs font-mono" placeholder='粘貼報告數據，例如: {"reportWeek":"WW10",...}'></textarea>
+                        <div class="flex items-center">
+                            <span class="flex-grow border-t border-gray-300 dark:border-gray-600"></span>
+                            <span class="mx-4 text-gray-500 dark:text-gray-400 text-sm">或者</span>
+                            <span class="flex-grow border-t border-gray-300 dark:border-gray-600"></span>
+                        </div>
+                        <button id="select-file-btn" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded flex items-center justify-center">
+                            <i class="fas fa-file-upload mr-2"></i>選擇報告文件
+                        </button>
+                        <input type="file" id="file-input" accept=".json" class="hidden">
+                    </div>
+                    <div class="mt-6 flex justify-between">
+                        <button id="load-report-data" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded">
+                            載入報告
+                        </button>
+                        <button id="close-load-dialog" class="text-blue-600 dark:text-blue-400 hover:underline">
+                            取消
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(loadDialog);
+            
+            // Add event listeners to the dialog buttons
+            document.getElementById('select-file-btn').addEventListener('click', function() {
+                document.getElementById('file-input').click();
+            });
+            
+            document.getElementById('file-input').addEventListener('change', function() {
+                if (this.files && this.files[0]) {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        try {
+                            const reportData = JSON.parse(e.target.result);
+                            document.getElementById('report-data-input').value = JSON.stringify(reportData, null, 2);
+                        } catch (error) {
+                            alert('無法解析檔案。請確保選擇了正確的報告檔案。');
+                            console.error('Error parsing the file:', error);
+                        }
+                    };
+                    reader.readAsText(this.files[0]);
+                }
+            });
+            
+            document.getElementById('load-report-data').addEventListener('click', function() {
+                const reportDataText = document.getElementById('report-data-input').value.trim();
+                if (!reportDataText) {
+                    alert('請先粘貼報告數據或選擇報告文件。');
+                    return;
+                }
+                
+                try {
+                    const reportData = JSON.parse(reportDataText);
+                    loadFormData(reportData);
+                    document.body.removeChild(loadDialog);
+                } catch (error) {
+                    alert('無法解析報告數據。請確保格式正確。');
+                    console.error('Error parsing report data:', error);
+                }
+            });
+            
+            document.getElementById('close-load-dialog').addEventListener('click', function() {
+                document.body.removeChild(loadDialog);
+            });
+        });
+        
+        function collectFormData() {
+            // Collect all form data into a structured object
+            // This is a simplified function - you would expand this to capture all form fields
+            const reportData = {
+                reportWeek: document.getElementById('report-week').value,
+                contractNumber: document.getElementById('contract-number').value,
+                inspectionDateStart: document.getElementById('inspection-date-start').value,
+                inspectionDateEnd: document.getElementById('inspection-date-end').value,
+                inspectorName: document.getElementById('inspector-name').value,
+                signature: signaturePad.toDataURL(),
+                accidentReport: document.getElementById('accident-report').value,
+                inspectionRecords: [],
+                deptLetters: [],
+                companyLetters: [],
+                safetyIncidents: [],
+                toolboxTrainings: [],
+                // ... add more fields as needed
+            };
+            
+            // Collect table rows data
+            document.querySelectorAll('#inspection-records-table tbody tr').forEach(row => {
+                const record = {
+                    date: row.querySelector('td:nth-child(1) input').value,
+                    inspector: row.querySelector('td:nth-child(2) input').value,
+                    content: row.querySelector('td:nth-child(3) input').value,
+                    remarks: row.querySelector('td:nth-child(4) input').value
+                };
+                reportData.inspectionRecords.push(record);
+            });
+            
+            // ... similar collection for other tables
+            
+            return reportData;
+        }
+        
+        function loadFormData(reportData) {
+            // Load data into the form
+            document.getElementById('report-week').value = reportData.reportWeek || '';
+            document.getElementById('report-title-display').textContent = `每週安全視察報告 ${reportData.reportWeek || 'WW10'}`;
+            document.getElementById('contract-number').value = reportData.contractNumber || '';
+            document.getElementById('inspection-date-start').value = reportData.inspectionDateStart || '';
+            document.getElementById('inspection-date-end').value = reportData.inspectionDateEnd || '';
+            document.getElementById('inspector-name').value = reportData.inspectorName || '';
+            document.getElementById('accident-report').value = reportData.accidentReport || '';
+            
+            if (reportData.signature) {
+                signaturePad.fromDataURL(reportData.signature);
+            }
+            
+            // ... load more fields as needed
+            
+            alert('報告已載入成功！');
+        }
+        
+        // Print/Copy/PDF functionality
+        document.getElementById('printBtn').addEventListener('click', function() {
+            document.getElementById('print-modal').classList.remove('hidden');
+        });
+        
+        document.getElementById('close-print-modal').addEventListener('click', function() {
+            document.getElementById('print-modal').classList.add('hidden');
+        });
+        
+        document.getElementById('print-report').addEventListener('click', function() {
+            document.getElementById('print-modal').classList.add('hidden');
+            window.print();
+        });
+        
+        document.getElementById('save-as-pdf').addEventListener('click', function() {
+            document.getElementById('print-modal').classList.add('hidden');
+            document.getElementById('pdf-guide-modal').classList.remove('hidden');
+        });
+        
+        document.getElementById('close-pdf-guide').addEventListener('click', function() {
+            document.getElementById('pdf-guide-modal').classList.add('hidden');
+        });
+        
+        document.getElementById('start-pdf-process').addEventListener('click', function() {
+            // Hide PDF guide modal
+            document.getElementById('pdf-guide-modal').classList.add('hidden');
+            
+            // Hide any UI elements not needed in the PDF
+            const noPrintElements = document.querySelectorAll('.no-print');
+            noPrintElements.forEach(el => el.style.display = 'none');
+            
+            // Show manual print instructions since window.print() may be restricted
+            const manualPrintDialog = document.createElement('div');
+            manualPrintDialog.className = 'fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50';
+            manualPrintDialog.innerHTML = `
+                <div class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-xl max-w-md w-full">
+                    <h3 class="text-xl font-bold mb-4 text-gray-800 dark:text-white">手動打開列印對話框</h3>
+                    <div class="mb-6">
+                        <p class="mb-4 text-gray-600 dark:text-gray-300">請按照以下步驟手動打開列印對話框：</p>
+                        <ol class="list-decimal pl-5 space-y-2 text-gray-600 dark:text-gray-300">
+                            <li>使用鍵盤快捷鍵：
+                                <ul class="list-disc pl-5 mt-1">
+                                    <li>Windows: <strong>Ctrl + P</strong></li>
+                                    <li>Mac: <strong>Command + P</strong></li>
+                                </ul>
+                            </li>
+                            <li>在列印對話框中，選擇<strong>「另存為PDF」</strong>或<strong>「Microsoft Print to PDF」</strong></li>
+                            <li>調整紙張大小為A4，方向為縱向</li>
+                            <li>點擊「保存」並選擇保存位置</li>
+                        </ol>
+                    </div>
+                    <div class="flex justify-center">
+                        <button id="close-manual-print-dialog" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded">
+                            我已完成列印
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(manualPrintDialog);
+            
+            // Add event listeners
+            document.getElementById('close-manual-print-dialog').addEventListener('click', function() {
+                document.body.removeChild(manualPrintDialog);
+                // Restore no-print elements
+                noPrintElements.forEach(el => el.style.display = '');
+            });
+        });
+        
+        document.getElementById('copy-report').addEventListener('click', function() {
+            const reportContent = document.getElementById('report-content');
+            
+            // Temporarily hide no-print elements
+            const noPrintElements = document.querySelectorAll('.no-print');
+            noPrintElements.forEach(el => el.style.display = 'none');
+            
+            // Select the text
+            const range = document.createRange();
+            range.selectNode(reportContent);
+            window.getSelection().removeAllRanges();
+            window.getSelection().addRange(range);
+            
+            // Copy
+            document.execCommand('copy');
+            
+            // Restore no-print elements
+            noPrintElements.forEach(el => el.style.display = '');
+            
+            // Clear selection
+            window.getSelection().removeAllRanges();
+            
+            alert('報告內容已複製到剪貼板。您可以將其粘貼到Word文檔中。');
+            document.getElementById('print-modal').classList.add('hidden');
+        });
+        
+        // Update report title when week changes
+        document.getElementById('report-week').addEventListener('input', function() {
+            document.getElementById('report-title-display').textContent = `每週安全視察報告 ${this.value}`;
+        });
+        
+        // AI Assistant
+        document.getElementById('ai-assistant-btn').addEventListener('click', function() {
+            document.getElementById('ai-assistant-panel').classList.toggle('hidden');
+        });
+        
+        document.getElementById('close-ai-assistant').addEventListener('click', function() {
+            document.getElementById('ai-assistant-panel').classList.add('hidden');
+        });
+        
+        document.getElementById('ask-ai').addEventListener('click', async function() {
+            const prompt = document.getElementById('ai-prompt').value.trim();
+            if (!prompt) {
+                alert('請輸入您需要協助的內容');
+                return;
+            }
+            
+            document.getElementById('ai-loader').classList.remove('hidden');
+            document.getElementById('ai-response').classList.add('hidden');
+            
+            try {
+                // Register handler for bot response
+                window.Poe.registerHandler("safety-report-assistant", (result) => {
+                    const response = result.responses[0];
+                    
+                    if (response.status === "error") {
+                        document.getElementById('ai-loader').classList.add('hidden');
+                        alert('獲取 AI 建議時出錯: ' + response.statusText);
+                    } else if (response.status === "complete") {
+                        document.getElementById('ai-loader').classList.add('hidden');
+                        document.getElementById('ai-response').innerHTML = response.content;
+                        document.getElementById('ai-response').classList.remove('hidden');
+                    }
+                });
+                
+                await window.Poe.sendUserMessage(
+                    `@Claude-3.7-Sonnet 我正在填寫一份工地安全巡查報告，請幫我：${prompt}`,
+                    {
+                        handler: "safety-report-assistant",
+                        stream: false,
+                        openChat: false
+                    }
+                );
+            } catch (err) {
+                document.getElementById('ai-loader').classList.add('hidden');
+                alert('獲取 AI 建議時出錯: ' + err.message);
+            }
+        });
+        
+        // Add event listeners to existing delete buttons
+        document.querySelectorAll('.delete-row').forEach(button => {
+            button.addEventListener('click', function() {
+                const row = this.closest('tr');
+                row.parentNode.removeChild(row);
+            });
+        });
+    </script>
+
+
+</body></html>
